@@ -1,61 +1,50 @@
+<form action="" method="POST">
+    <p>Введите количество камней (X):<br>
+        <input type="text" name="x"/></p>
+    <p>Введите количество жуков (Y): <br>
+        <input type="text" name="y"/></p>
+    <input type="submit" value="Готово">
+</form>
+
 <?php
-$y = 3; //Жуки
-$x = 8; //Камни
-$i = 0;//для цикла
-$left = 0;
-$right =0;
+/* Проверка на корректность*/
+if (!empty($_POST['x']) && !empty($_POST['y'])) {
+    $y = htmlentities($_POST['y']); //Жуки
+    $x = htmlentities($_POST['x']); //Камни
+    if (!is_numeric($y) || !is_numeric($x)) die('Введите число!');
+    if ($y >= $x) die('Количество жуков больше количества камней!');
+}
+else {
+   die('Введите количество камней и жуков<br>');
+}
+
+$i = 1;//для цикла
+$interval = $x;//максимальное растояние
+$startPos = 0;
 $masiv = array_fill(1, $x, null); //Заполняем ячейки пустотой
+$masiv[$x+1] = "end";//обозначение конца масива
 
-function Proverka() //Проверка свободного места слева и справа от масива, и создание глобальной переменной
-{
-    global $masiv, $left, $right, $endStone;
-    for($a=1;$a<=count($masiv);$a++){
-        if($masiv[$a]){
-             $left = $a - 1;
-            break;
-        }
-    }
-    for($b=count($masiv);$b>=1;$b--){
-        if($masiv[$b]) {
-            $endStone = $b; //Номер последней ячейки с жуком
-            $right =count($masiv) - $b;
-            break;
-        }
-    }
-}
-
-while ($i!=$y){ //Заполнение масива
-    $stone = round($x/2);//заполнение первого камня
-    if(!$masiv[$stone]){ //Если камень в центре есть, переходим дальше
-        $masiv[$stone] = "Juke";
-    }
-    else
+while ($i<=$y){ //Заполнение масива
+    $right = floor($interval/2);//свободное место справа
+    $left = $interval-$right-1;//получаем свободное место слева
+    $posJuke = round(($interval/2))+$startPos;//Значение масимального интервала делим на 2 и прибавляем к нему стартовую позицию
+    $masiv[$posJuke] = "Juke";//заполняем точку
+    $oldPos = 0; //отчка отсчета для нахождения дистанции
+    $maxInterval = 0;// Максимальный интервал среди всех
+    foreach ($masiv as $key => $value)
     {
-        Proverka();//Запуск проверки свободного места
-        if($left>=$right){  // Если места слева больше или равно, чем место справа, то выполняем заполнение по левой части масива
-            $stone = round($left/2); //Делим количество свободного места на 2
-            $masiv[$stone] = "Juke";
-        }
-        else{
-            $stone = round(($right/2)+$endStone);//Делим количество свободного места на 2 прибавляем занчение к последней заполненой ячейке
-            $masiv[$stone] = "Juke";
+        if($value){//Проверяем нахождение жука на камне
+            $interval1=$key-$oldPos-1;//высчитываем интервал
+            if($interval1>$maxInterval){//проверяем больше ли он максимального
+                $maxInterval = $interval1;//Если да то указываем его число максимальным
+                $startPos = $oldPos;//И позицию от которой она начинается
+            }
+            $oldPos =$key;//Обновляем значение старого ключа для интерации
         }
     }
-    $i++;
+    $interval = $maxInterval;//указываем максимальный интервал
+    $i++;//Переход к следующему жуку
 }
-
-echo "последняя заполненая ячейка:".$stone."<br>";
-for($a=$stone+1;$a<=count($masiv);$a++){
-    if(!$masiv[$a]) $rightstone++;
-    else break;
-}
-
-for($b=$stone-1;$b>=1;$b--){
-    if(!$masiv[$b]) $leftstone++;
-    else break;
-}
-
-echo "X=".$x.", Y=".$y."(".($leftstone).", ".$rightstone.")<br>";
-print_r($masiv);
+echo "X=".$x.", Y=".$y."У последнего жука свободно слева:".$left.", справа:".$right."<br>";
 ?>
 
